@@ -1,20 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-  experimental: {
-    serverComponentsExternalPackages: ['sharp', 'tesseract.js'],
-  },
-}
-
-module.exports = nextConfig
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
   experimental: {
     // You already had this – keep it
     serverComponentsExternalPackages: ['sharp', 'tesseract.js'],
