@@ -122,7 +122,7 @@ export default function Home() {
       formDataToSend.append('alcoholContent', formData.alcoholContent)
       formDataToSend.append('netContents', formData.netContents)
       
-      const response = await fetch('/api/verify-demo', {
+      const response = await fetch('/api/verify', {
         method: 'POST',
         body: formDataToSend
       })
