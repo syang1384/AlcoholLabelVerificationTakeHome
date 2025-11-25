@@ -6,8 +6,7 @@
   "framework": "nextjs",
   "functions": {
     "src/app/api/verify/route.ts": {
-      "maxDuration": 60,
-      "includeFiles": "node_modules/tesseract.js-core/tesseract-core-simd.wasm"
+      "maxDuration": 60
     }
   },
   "env": {
