@@ -7,8 +7,7 @@
   "functions": {
     "src/app/api/verify/route.ts": {
       "maxDuration": 60,
-      "includeFiles": "node_modules/tesseract.js-core/tesseract-core-simd.wasm",
-      "runtime": "nodejs20.x"
+      "includeFiles": "node_modules/tesseract.js-core/tesseract-core-simd.wasm"
     }
   },
   "env": {
