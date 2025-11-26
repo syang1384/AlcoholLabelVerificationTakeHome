@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, unlink } from 'fs/promises'
 import { join } from 'path'
 import { tmpdir } from 'os'
-import { createWorker } from 'tesseract.js'
 import { 
   preprocessImage, 
   calculateConfidence, 
   detectBottleLabel,
   extractLabelRegion 
 } from '@/utils/imageProcessing'
+import { getVisionClient } from '@/utils/visionClient';
 
 export async function POST(request: NextRequest) {
   try {
@@ -82,67 +82,52 @@ export async function POST(request: NextRequest) {
 
 // Separate function for OCR processing
 async function processImageWithOCR(buffer: Buffer, label: string): Promise<string> {
-  const tempPath = join(tmpdir(), `label-${label}-${Date.now()}.png`)
-  
-  try {
-    await writeFile(tempPath, buffer)
-    
-    // Detect if this is a bottle and extract label region
-    const bottleInfo = await detectBottleLabel(buffer)
-    let processBuffer = buffer
-    
-    if (bottleInfo.isBottle && bottleInfo.labelRegion) {
-      console.log(`Detected wine bottle on ${label} label, extracting label region`)
-      processBuffer = await extractLabelRegion(buffer, bottleInfo.labelRegion)
-    }
-    
-    // Preprocess image with multiple techniques
-    console.log(`Preprocessing ${label} image for better OCR...`)
-    const processedImages = await preprocessImage(processBuffer, {
-      enhance: true,
-      grayscale: true,
-      contrast: 1.5,
-      brightness: 1.0,
-      threshold: 128
-    })
-    
-    // Try OCR on each processed version
-    const worker = await createWorker('eng')
-    let bestText = ''
-    let bestConfidence = 0
-    
-    for (let i = 0; i < processedImages.length; i++) {
-      const processedPath = join(tmpdir(), `label-${label}-processed-${Date.now()}-${i}.png`)
-      await writeFile(processedPath, processedImages[i])
-      
-      try {
-        const { data: { text, confidence } } = await worker.recognize(processedPath)
-        
-        // Keep track of the best result
-        if (text.length > bestText.length || confidence > bestConfidence) {
-          bestText = text
-          bestConfidence = confidence
-        }
-        
-        await unlink(processedPath)
-      } catch (err) {
-        console.error(`OCR attempt ${i} on ${label} failed:`, err)
-      }
-    }
-    
-    await worker.terminate()
-    await unlink(tempPath)
-    
-    return bestText
-    
-  } catch (error) {
-    console.error(`Error processing ${label} image:`, error)
-    try {
-      await unlink(tempPath)
-    } catch {}
-    return ''
+  // Detect if this is a bottle and extract label region
+  const bottleInfo = await detectBottleLabel(buffer);
+  let processBuffer = buffer;
+
+  if (bottleInfo.isBottle && bottleInfo.labelRegion) {
+    console.log(`Detected wine bottle on ${label} label, extracting label region`);
+    processBuffer = await extractLabelRegion(buffer, bottleInfo.labelRegion);
   }
+
+  console.log(`Preprocessing ${label} image for better OCR...`);
+  const processedImages = await preprocessImage(processBuffer, {
+    enhance: true,
+    grayscale: true,
+    contrast: 1.5,
+    brightness: 1.0,
+    threshold: 128,
+  });
+
+  const client = getVisionClient();
+
+  let bestText = '';
+
+  // Limit attempts to avoid long runtimes
+  for (let i = 0; i < Math.min(processedImages.length, 3); i++) {
+    try {
+      // Use Vision on the in-memory buffer (no need to write to disk)
+      const [result] = await client.textDetection({
+        image: { content: processedImages[i] },
+      });
+
+      const fullText =
+        result.fullTextAnnotation?.text ||
+        (result.textAnnotations && result.textAnnotations[0]?.description) ||
+        '';
+
+      if (fullText && fullText.length > bestText.length) {
+        bestText = fullText;
+      }
+    } catch (err) {
+      console.error(`Vision OCR attempt ${i} on ${label} failed:`, err);
+    }
+  }
+
+  return bestText;
 }
+
 
 function verifyLabel(
   extractedText: string,

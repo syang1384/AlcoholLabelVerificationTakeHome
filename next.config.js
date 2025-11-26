@@ -7,7 +7,7 @@ const nextConfig = {
     },
   },
   experimental: {
-    serverComponentsExternalPackages: ['sharp', 'tesseract.js'],
+    serverComponentsExternalPackages: ['sharp'],
   },
 }
 
