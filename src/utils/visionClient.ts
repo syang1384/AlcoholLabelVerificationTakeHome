@@ -1,22 +1,24 @@
-import vision from '@google-cloud/vision';
+// src/utils/visionClient.ts
 
-let cachedClient: vision.ImageAnnotatorClient | null = null;
+import { ImageAnnotatorClient } from '@google-cloud/vision';
+
+let cachedClient: ImageAnnotatorClient | null = null;
 
 export function getVisionClient() {
   if (cachedClient) return cachedClient;
 
-  const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
+  const credsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
   const projectId = process.env.GOOGLE_PROJECT_ID;
 
-  if (!credentialsJson || !projectId) {
+  if (!credsJson || !projectId) {
     throw new Error(
       'Google Vision not configured: missing GOOGLE_PROJECT_ID or GOOGLE_APPLICATION_CREDENTIALS_JSON'
     );
   }
 
-  const credentials = JSON.parse(credentialsJson);
+  const credentials = JSON.parse(credsJson);
 
-  cachedClient = new vision.ImageAnnotatorClient({
+  cachedClient = new ImageAnnotatorClient({
     projectId,
     credentials,
   });
