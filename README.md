@@ -351,3 +351,11 @@ MIT - Use freely for learning and development
 **Note**: This project demonstrates real-world problem-solving, not perfect solutions. The manual correction feature and transparency about limitations show practical engineering judgment over idealistic automation.
 
 Built with pragmatism and tested with actual wine bottles 🍷
+
+## OCR Testing Evidence
+
+### Successful Test
+![Success Example](./screenshots/workingTest1.png)![](./screenshots/workingTest1.1.png)
+
+### Failed Test
+![Failure Example](.screenshots/brokenTest2.png)![](./screenshots/brokenTest2.1.png)
